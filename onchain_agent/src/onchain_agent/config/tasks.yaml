@@ -1,0 +1,134 @@
+portfolio_analysis:
+  description: >
+    Analyze wallet {wallet_address} across {networks} networks, covering:
+    
+    1. Asset composition: Calculate allocations by asset class, market cap tiers, and identify DeFi positions
+    2. Risk assessment: Calculate concentration metrics, volatility, correlation, and smart contract risk
+    3. Performance: Compare to benchmarks, track value changes, identify alpha/beta contributors
+    4. Anomalies: Flag unusual positions, protocol interactions, and concentration risks
+  expected_output: >
+    # Portfolio Analysis Report for {wallet_address}
+    
+    ## 1. Executive Summary
+    * Portfolio value with percentage changes
+    * Key risk metrics and significant findings
+    
+    ## 2. Portfolio Composition
+    * Asset allocation by class, network, and protocol
+    * Top holdings with values
+    
+    ## 3. Risk Assessment
+    * Concentration, volatility, and correlation analysis
+    * Smart contract and liquidity risk assessment
+    
+    ## 4. Performance Analysis
+    * Historical performance vs benchmarks
+    * Best/worst assets and risk-adjusted metrics
+    
+    ## 5. Optimization Opportunities
+    * Diversification and risk mitigation strategies
+    * Yield and gas efficiency improvements
+  agent: portfolio_intelligence_analyst
+
+transaction_pattern_analysis:
+  description: >
+    Analyze transaction patterns for wallet {wallet_address} across {networks} networks:
+    
+    1. Temporal patterns: Identify frequency distributions, recurring patterns, and volatility correlations
+    2. Behavioral signatures: Classify transaction types, analyze gas strategies, and identify outliers
+    3. Protocol interactions: Map primary protocols, fund flows, and loyalty metrics
+    4. Counterparty assessment: Identify recurring relationships and risk exposures
+    5. Anomaly detection: Flag outliers, pattern deviations, and potential MEV exploitation
+  expected_output: >
+    # Transaction Pattern Analysis for {wallet_address}
+    
+    ## 1. Activity Profile
+    * Transaction frequency patterns and correlations
+    * Volume distribution summary
+    
+    ## 2. Behavioral Signatures
+    * Transaction type breakdown
+    * Gas strategy and efficiency metrics
+    * DEX usage patterns
+    
+    ## 3. Protocol Engagement
+    * Protocol usage ranking and loyalty metrics
+    * Inter-protocol capital flows
+    
+    ## 4. Network Analysis
+    * Key counterparties and relationship patterns
+    * Risk exposure assessment
+    
+    ## 5. Anomalies & Insights
+    * Pattern deviations and unusual sequences
+    * Strategic intelligence and predictions
+  agent: transaction_pattern_specialist
+
+
+
+investment_opportunity_identification:
+  description: >
+    Identify investment opportunities for wallet {wallet_address}:
+    
+    1. Cross-chain arbitrage: Find price differentials, liquidity imbalances, and bridging opportunities
+    2. Portfolio optimization: Calculate optimal allocations, identify under/overweighted positions
+    3. Yield optimization: Find better yields, liquidity mining strategies, and collateral efficiency
+    4. Risk management: Determine hedging strategies and downside protection mechanisms
+  expected_output: >
+    # Investment Opportunity Analysis for {wallet_address}
+    
+    ## 1. Executive Summary
+    * Top opportunities and implementation priorities
+    * Risk/return overview
+    
+    ## 2. Cross-Chain Arbitrage
+    * Price differentials and execution pathways
+    * Profit calculations and timing considerations
+    
+    ## 3. Portfolio Optimization
+    * Current vs. optimal allocations
+    * Rebalancing recommendations
+    
+    ## 4. Yield Enhancements
+    * Protocol opportunities and APY comparisons
+    * Implementation steps
+    
+    ## 5. Implementation Plan
+    * Prioritized action steps and monitoring framework
+  agent: cross_chain_investment_strategist
+
+comprehensive_intelligence_report:
+  description: >
+    Create integrated intelligence report for {wallet_address}:
+    
+    1. Pattern synthesis: Identify connections between portfolio, transaction, and social data
+    2. Benchmarking: Compare wallet performance against peers and market metrics
+    3. Risk assessment: Evaluate aggregate risk exposure across all dimensions
+    4. Recommendations: Prioritize opportunities and develop action plan
+  expected_output: >
+    # Comprehensive Intelligence Report: {wallet_address}
+    
+    ## 1. Executive Summary
+    * Key findings and strategic positioning
+    * Risk/opportunity overview
+    
+    ## 2. Performance Analysis
+    * Consolidated metrics and peer comparison
+    * Sources of alpha/beta and projections
+    
+    ## 3. Behavioral Profile
+    * Decision patterns and risk tolerance
+    * Adaptability and competitive advantages
+    
+    ## 4. Relationship Map
+    * Key connections and influence flows
+    * Strategic relationship opportunities
+    
+    ## 5. Risk Assessment
+    * Integrated risks and vulnerabilities
+    * Mitigation priorities
+    
+    ## 6. Action Plan
+    * Prioritized recommendations
+    * Implementation steps and monitoring
+  agent: portfolio_intelligence_analyst
