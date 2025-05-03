@@ -1,23 +1,49 @@
-# Onchain AI Agent
+# Onchain AI Agent Streamlit Interface
 
-An AI-powered agent for blockchain analytics that provides comprehensive portfolio analysis and market intelligence using Zapper API integration.
+This Streamlit application provides a user interface for the Onchain AI Agent system, enabling blockchain portfolio analysis across multiple networks.
 
 ## Features
 
-- **Portfolio Analysis Tool**: Fetch and analyze comprehensive portfolio data including token balances, DeFi positions, and NFT holdings
-- **Search Tool**: Search for tokens, accounts, apps, and NFTs across multiple blockchains
-- **CrewAI Integration**: Multi-agent system with specialized AI agents for different blockchain analysis tasks
+- Blockchain wallet analysis across multiple networks
+- Portfolio composition analysis
+- Transaction pattern recognition
+- Cross-chain investment opportunities
+- Comprehensive intelligence reports
 
-## Key Components
+## Setup
 
-- Modern GraphQL integration with the Zapper API
-- Intelligent data processing and formatting
-- Robust error handling and caching
-- Cross-chain analytics support
+1. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
 
-## Getting Started
+2. Get required API keys:
+   - [Zapper API](https://zapper.xyz) - For blockchain data access
+   - [OpenRouter](https://openrouter.ai) - For LLM access
 
-1. Clone the repository
-2. Copy `.env.example` to `.env` and add your API keys
-3. Install dependencies with `pip install -e .`
-4. Run the agent with `python -m onchain_agent.main`
+3. Run the Streamlit app:
+   ```
+   streamlit run app.py
+   ```
+
+## Usage
+
+1. Enter your API keys in the sidebar
+2. Input a wallet address to analyze
+3. Select blockchain networks to include
+4. Click "Run Analysis" to start the process
+5. View and download the generated report
+
+## Project Structure
+
+- `app.py` - Main Streamlit application
+- `agent_bridge.py` - Bridge between UI and Onchain agent
+- `output_handler.py` - Agent output handling for Streamlit
+- `requirements.txt` - Project dependencies
+
+## Dependencies
+
+- streamlit
+- crewai
+- python-dotenv
+- requests

@@ -9,6 +9,7 @@ class TokenPriceToolInput(BaseModel):
     token_address: str = Field(..., description="Token contract address to fetch price data for")
     network: str = Field("ethereum", description="Blockchain network to query (default: ethereum)")
     days: int = Field(30, description="Number of days of historical data to fetch (default: 30)")
+    currency: str = Field("USD", description="Currency for price data (default: USD)")
 
 
 class TokenPriceTool(BaseTool):
@@ -30,7 +31,20 @@ class TokenPriceTool(BaseTool):
         """Generate a cache key based on input parameters."""
         return f"{token_address.lower()}:{network.lower()}:{days}"
     
-    def _run(self, token_address: str, network: str = "ethereum", days: int = 30) -> str:
+    def _map_days_to_timeframe(self, days: int) -> str:
+        """Maps number of days to the appropriate TimeFrame enum value."""
+        if days <= 1:
+            return "HOUR"
+        elif days <= 7:
+            return "DAY"
+        elif days <= 30:
+            return "WEEK"
+        elif days <= 365:
+            return "MONTH"
+        else:
+            return "YEAR"
+    
+    def _run(self, token_address: str, network: str = "ethereum", days: int = 30, currency: str = "USD") -> str:
         """Run the token price data retrieval with caching."""
         # Check cache first
         cache_key = self._cache_key(token_address, network, days)
@@ -41,44 +55,36 @@ class TokenPriceTool(BaseTool):
             # Convert network name to chain ID
             chain_id = ZapperBase.get_chain_id(network)
             
+            # Map days to appropriate timeframe
+            time_frame = self._map_days_to_timeframe(days)
+            
             # Create GraphQL query for fungibleTokenV2
             query = '''
-            query TokenPriceData($address: Address!, $chainId: Int!) {
+            query TokenPriceData($address: Address!, $chainId: Int!, $currency: Currency!, $timeFrame: TimeFrame!) {
               fungibleTokenV2(address: $address, chainId: $chainId) {
                 # Basic token information
                 address
                 symbol
                 name
                 decimals
-                network {
-                  name
-                  chainId
-                }
                 imageUrlV2
                 
-                # Current price data
+                # Market data and pricing information
                 priceData {
+                  marketCap
                   price
                   priceChange5m
                   priceChange1h
                   priceChange24h
-                  priceChange7d
-                  priceChange30d
-                  marketCap
-                  fullyDilutedValuation
-                  totalSupply
                   volume24h
-                  ath {
-                    price
-                    timestamp
-                  }
-                  atl {
-                    price
-                    timestamp
-                  }
-                  # Historical price data for chart
-                  priceHistory(interval: DAILY, count: 30) {
-                    price
+                  totalGasTokenLiquidity
+                  totalLiquidity
+                  
+                  # Historical price data for charts
+                  priceTicks(currency: $currency, timeFrame: $timeFrame) {
+                    open
+                    median
+                    close
                     timestamp
                   }
                 }
@@ -89,7 +95,9 @@ class TokenPriceTool(BaseTool):
             # Prepare variables
             variables = {
                 "address": token_address,
-                "chainId": chain_id
+                "chainId": chain_id,
+                "currency": currency.upper(),
+                "timeFrame": time_frame
             }
             
             # Execute GraphQL query
@@ -104,7 +112,8 @@ class TokenPriceTool(BaseTool):
             return formatted_result
             
         except Exception as e:
-            return f"Error fetching token price data: {str(e)}"
+            error_details = f"Error type: {type(e).__name__}, Error message: {str(e)}"
+            return f"Error fetching token price data: {error_details}"
     
     def _format_price_data(self, data: Dict[str, Any], token_address: str) -> str:
         """Format token price data into a readable string."""
@@ -119,50 +128,47 @@ class TokenPriceTool(BaseTool):
         # Basic token information
         symbol = token_data.get("symbol", "Unknown")
         name = token_data.get("name", "Unknown Token")
-        network_name = token_data.get("network", {}).get("name", "Unknown Network")
+        
+        # Extract chain/network from the response or use address format
+        chain_info = ""
+        if token_address.startswith("0x"):
+            chain_info = "on Ethereum"  # Default if can't determine
         
         # Price data
         price_data = token_data.get("priceData", {})
-        current_price = price_data.get("price", 0)
-        price_change_24h = price_data.get("priceChange24h", 0)
-        price_change_7d = price_data.get("priceChange7d", 0)
-        price_change_30d = price_data.get("priceChange30d", 0)
-        market_cap = price_data.get("marketCap", 0)
-        volume_24h = price_data.get("volume24h", 0)
+        current_price = float(price_data.get("price", 0))
+        price_change_24h = float(price_data.get("priceChange24h", 0))
+        price_change_1h = float(price_data.get("priceChange1h", 0))
+        price_change_5m = float(price_data.get("priceChange5m", 0))
+        market_cap = float(price_data.get("marketCap", 0))
+        volume_24h = float(price_data.get("volume24h", 0))
+        total_liquidity = float(price_data.get("totalLiquidity", 0))
         
-        # All-time high/low data
-        ath = price_data.get("ath", {})
-        ath_price = ath.get("price", 0)
-        
-        atl = price_data.get("atl", {})
-        atl_price = atl.get("price", 0)
-        
-        # Calculate price trend from historical data
-        price_history = price_data.get("priceHistory", [])
+        # Calculate price trend from price ticks
+        price_ticks = price_data.get("priceTicks", [])
         price_trend = "No historical data available"
         
-        if price_history and len(price_history) >= 2:
-            start_price = price_history[0].get("price", 0)
-            end_price = price_history[-1].get("price", 0)
+        if price_ticks and len(price_ticks) >= 2:
+            start_price = float(price_ticks[0].get("close", 0))
+            end_price = float(price_ticks[-1].get("close", 0))
             
-            if start_price:  # Avoid division by zero
+            if start_price > 0:  # Avoid division by zero
                 percent_change = ((end_price - start_price) / start_price * 100)
                 direction = "increased" if percent_change > 0 else "decreased"
-                price_trend = f"Price {direction} by {abs(percent_change):.2f}% over the last {len(price_history)} days"
+                price_trend = f"Price {direction} by {abs(percent_change):.2f}% over the analyzed period"
         
         # Format the full price summary
         summary = [
-            f"Token Price Analysis for {name} ({symbol}) on {network_name}:",
+            f"Token Price Analysis for {name} ({symbol}) {chain_info}:",
             f"Contract: {token_address}",
             f"Current Price: ${current_price:.6f}",
-            f"All-time High: ${ath_price:.6f}",
-            f"All-time Low: ${atl_price:.6f}",
             f"Price Changes:",
+            f"  5min: {price_change_5m:.2f}%",
+            f"  1h: {price_change_1h:.2f}%",
             f"  24h: {price_change_24h:.2f}%",
-            f"  7d: {price_change_7d:.2f}%",
-            f"  30d: {price_change_30d:.2f}%",
             f"Market Cap: ${market_cap:,.2f}",
             f"24h Trading Volume: ${volume_24h:,.2f}",
+            f"Total Liquidity: ${total_liquidity:,.2f}",
             f"Trend: {price_trend}"
         ]
         

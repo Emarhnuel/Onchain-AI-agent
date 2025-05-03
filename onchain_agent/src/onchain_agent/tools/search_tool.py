@@ -71,9 +71,10 @@ class SearchTool(BaseTool):
             query SearchV2($input: SearchInputV2!) {
               searchV2(input: $input) {
                 results {
-                  category
+                  __typename
                   # Token fields
                   ... on UnifiedErc20TokenResult {
+                    category
                     name
                     symbol
                     imageUrl
@@ -91,18 +92,18 @@ class SearchTool(BaseTool):
                   }
                   # User fields
                   ... on UserResult {
+                    category
                     address
                     account {
                       displayName {
                         value
                       }
-                      balance {
-                        totalUSD
-                      }
+                      # Balance field removed as it's no longer available
                     }
                   }
                   # App fields
                   ... on AppResult {
+                    category
                     appId
                     app {
                       displayName
@@ -112,6 +113,7 @@ class SearchTool(BaseTool):
                   }
                   # NFT fields
                   ... on NftCollectionResult {
+                    category
                     address
                     network
                     collection {
@@ -152,7 +154,8 @@ class SearchTool(BaseTool):
             return formatted_result
             
         except Exception as e:
-            return f"Error performing search: {str(e)}"
+            error_details = f"Error type: {type(e).__name__}, Error message: {str(e)}"
+            return f"Error performing search: {error_details}"
     
     def _format_search_results(self, data: Dict[str, Any], query: str) -> str:
         """Format search results into a readable string."""
@@ -165,21 +168,25 @@ class SearchTool(BaseTool):
         summary = [f"Search Results for '{query}':\n"]
         results_found = False
         
-        # Group results by category
+        # Group results by type using __typename
         tokens = []
         users = []
         apps = []
         nfts = []
         
         for result in results:
+            # Use __typename for primary type identification
+            result_type = result.get("__typename")
+            # Fall back to category if available
             category = result.get("category")
-            if category == "UNIFIED_ERC20_TOKEN":
+            
+            if result_type == "UnifiedErc20TokenResult":
                 tokens.append(result)
-            elif category == "USER":
+            elif result_type == "UserResult":
                 users.append(result)
-            elif category == "APP":
+            elif result_type == "AppResult":
                 apps.append(result)
-            elif category == "NFT_COLLECTION":
+            elif result_type == "NftCollectionResult":
                 nfts.append(result)
         
         # Process token results
@@ -199,6 +206,10 @@ class SearchTool(BaseTool):
                     price_data = token_data.get("priceData", {})
                     price = price_data.get("price", 0)
                     price_change = price_data.get("priceChange24h", 0)
+                    
+                    # Ensure values are properly converted to float
+                    price = float(price) if price is not None else 0.0
+                    price_change = float(price_change) if price_change is not None else 0.0
                     
                     summary.append(f"{idx}. {name} ({symbol})")
                     summary.append(f"   Price: ${price:.6f} (24h change: {price_change:.2f}%)")
@@ -220,12 +231,9 @@ class SearchTool(BaseTool):
                 account_info = user.get("account", {})
                 display_name_info = account_info.get("displayName", {})
                 display_name = display_name_info.get("value", address)
-                balance = account_info.get("balance", {}).get("totalUSD", 0)
                 
                 summary.append(f"{idx}. {display_name}")
                 summary.append(f"   Address: {address}")
-                if balance > 0:
-                    summary.append(f"   Value: ${balance:,.2f}")
                 summary.append("")
             
             summary.append("")
@@ -260,6 +268,9 @@ class SearchTool(BaseTool):
                 symbol = collection.get("symbol", "")
                 floor_price_info = collection.get("floorPrice", {})
                 floor_price = floor_price_info.get("valueUsd", 0) if floor_price_info else 0
+                
+                # Ensure value is properly converted to float
+                floor_price = float(floor_price) if floor_price is not None else 0.0
                 
                 summary.append(f"{idx}. {name} ({symbol})")
                 summary.append(f"   Floor Price: ${floor_price:.4f}")

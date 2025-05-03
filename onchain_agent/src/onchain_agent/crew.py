@@ -25,16 +25,16 @@ llm = LLM(
     model="openrouter/google/gemini-2.5-flash-preview:thinking",
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
-    temperature=0.3,
+    temperature=0.5,
     max_tokens=50000
-)
+) 
 
 llm2 = LLM(
     model="openrouter/deepseek/deepseek-r1",
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
-    temperature=0.3,
-    max_tokens=50000
+    temperature=0.5,
+    max_tokens=30000
 )
 
 
@@ -50,7 +50,7 @@ class OnchainAgentCrew():
     # Configuration files for agents and tasks
     agents_config = 'config/agents.yaml'
     tasks_config = 'config/tasks.yaml'
-
+ 
 
     def __init__(self):
         """Initialize the Audience Analysis Crew."""
@@ -65,9 +65,9 @@ class OnchainAgentCrew():
     @agent
     def portfolio_intelligence_analyst(self) -> Agent:
         """Portfolio Intelligence Analyst agent with portfolio analysis tools."""
-        return Agent(
+        return Agent( 
             config=self.agents_config['portfolio_intelligence_analyst'],
-            llm=llm,
+            llm=llm2,
             verbose=True,
             tools=[
                 PortfolioTool(),
@@ -75,7 +75,7 @@ class OnchainAgentCrew():
                 SearchTool()
             ],
             max_rpm=40,
-            max_iter=7 
+            max_iter=10
         )
  
     # Transaction Pattern Recognition Specialist Agent
@@ -92,7 +92,7 @@ class OnchainAgentCrew():
                 SearchTool() 
             ],
             max_rpm=20,
-            max_iter=7,
+            max_iter=10,
             llm=llm2
         )
 
@@ -103,13 +103,13 @@ class OnchainAgentCrew():
         return Agent(
             config=self.agents_config['cross_chain_investment_strategist'],
             verbose=True,
-            llm=llm,
+            llm=llm2,
             tools=[
                 PortfolioTool(),
                 SearchTool()
             ],
             max_rpm=20,
-            max_iter=7  
+            max_iter=10  
         )
 
     # Portfolio Analysis Task
@@ -179,3 +179,5 @@ class OnchainAgentCrew():
             )
             
         )
+
+

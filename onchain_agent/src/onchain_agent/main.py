@@ -21,7 +21,7 @@ def run():
     # Sample inputs - replace with actual addresses for analysis
     inputs = {
         'wallet_address': '0x267be1C1D684F78cb4F6a176C4911b741E4Ffdc0', 
-        'networks': 'ethereum,polygon'
+        'networks': 'ethereum,polygon,base'
     }
     
     print("\n## Starting Onchain AI Agent Analysis")

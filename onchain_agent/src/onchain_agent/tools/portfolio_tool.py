@@ -148,31 +148,10 @@ class PortfolioTool(BaseTool):
                   }
                 }
                 
-                # NFT balances
+                # NFT balances - simplified to avoid schema validation errors
                 nftBalances {
-                  totalCount
-                  totalFloorValueUSD
-                  byCollection(first: 5) {
-                    edges {
-                      node {
-                        collection {
-                          name
-                          floorPrice
-                        }
-                        items(first: 3) {
-                          edges {
-                            node {
-                              name
-                              tokenId
-                              image {
-                                url
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
+                  totalBalanceUSD
+                  totalTokensOwned
                 }
               }
             }
@@ -195,7 +174,8 @@ class PortfolioTool(BaseTool):
             return formatted_result
             
         except Exception as e:
-            return f"Error fetching portfolio data: {str(e)}"
+            error_details = f"Error type: {type(e).__name__}, Error message: {str(e)}"
+            return f"Error fetching portfolio data: {error_details}"
     
     def _format_portfolio_data(self, data: Dict[str, Any], address: str) -> str:
         """Format portfolio data into a readable string."""
@@ -210,22 +190,39 @@ class PortfolioTool(BaseTool):
         app_balances = portfolio.get("appBalances", {})
         nft_balances = portfolio.get("nftBalances", {})
         
-        # Extract totals
-        total_value = (
-            token_balances.get("totalBalanceUSD", 0) + 
-            app_balances.get("totalBalanceUSD", 0) + 
-            nft_balances.get("totalFloorValueUSD", 0)
-        )
+        # Extract totals - ensure values are floats before adding
+        try:
+            total_value = (
+                float(token_balances.get("totalBalanceUSD", 0)) + 
+                float(app_balances.get("totalBalanceUSD", 0)) + 
+                float(nft_balances.get("totalBalanceUSD", 0))
+            )
+        except (ValueError, TypeError):
+            # Handle cases where values can't be converted to float
+            total_value = 0.0
         
-        # Get token count
-        token_count = token_balances.get("byToken", {}).get("totalCount", 0)
+        # Get token count - ensure it's an integer
+        try:
+            token_count = int(token_balances.get("byToken", {}).get("totalCount", 0))
+        except (ValueError, TypeError):
+            token_count = 0
         
-        # Get NFT count and value
-        nft_count = nft_balances.get("totalCount", 0)
-        nft_value = nft_balances.get("totalFloorValueUSD", 0)
+        # Get NFT count and value - ensure proper types
+        try:
+            nft_count = int(nft_balances.get("totalTokensOwned", 0))
+        except (ValueError, TypeError):
+            nft_count = 0
+            
+        try:
+            nft_value = float(nft_balances.get("totalBalanceUSD", 0))
+        except (ValueError, TypeError):
+            nft_value = 0.0
         
-        # Get app count
-        app_count = app_balances.get("byApp", {}).get("totalCount", 0)
+        # Get app count - ensure it's an integer
+        try:
+            app_count = int(app_balances.get("byApp", {}).get("totalCount", 0))
+        except (ValueError, TypeError):
+            app_count = 0
         
         # Extract token data from new structure
         tokens = []
@@ -279,57 +276,37 @@ class PortfolioTool(BaseTool):
                 
                 app_positions.append(pos_info)
         
-        # Extract NFT data from new structure
-        nft_items = []
-        collection_edges = nft_balances.get("byCollection", {}).get("edges", [])
-        
-        for collection_edge in collection_edges:
-            if not collection_edge or "node" not in collection_edge:
-                continue
-                
-            collection_node = collection_edge["node"]
-            collection_info = collection_node.get("collection", {})
-            
-            item_edges = collection_node.get("items", {}).get("edges", [])
-            for item_edge in item_edges:
-                if not item_edge or "node" not in item_edge:
-                    continue
-                    
-                item_node = item_edge["node"]
-                nft_items.append({
-                    "name": item_node.get("name", "Unnamed"),
-                    "tokenId": item_node.get("tokenId", "Unknown ID"),
-                    "collection": {
-                        "name": collection_info.get("name", "Unknown Collection"),
-                        "floorPrice": collection_info.get("floorPrice", 0)
-                    }
-                })
+        # No detailed NFT data processing needed - we're only using count and total value
+
         
         # Format top tokens by value
         top_tokens = []
-        sorted_tokens = sorted(tokens, key=lambda x: x.get("balanceUSD", 0), reverse=True)
+        sorted_tokens = sorted(tokens, key=lambda x: float(x.get("balanceUSD", 0)), reverse=True)
         for token in sorted_tokens[:5]:  # Get top 5 tokens
             symbol = token.get("symbol", "Unknown")
-            balance = token.get("balance", 0)
-            value = token.get("balanceUSD", 0)
-            price = token.get("price", 0)
+            # Ensure values are converted to float before formatting
+            balance = float(token.get("balance", 0))
+            value = float(token.get("balanceUSD", 0))
+            price = float(token.get("price", 0))
             network_name = token.get("network", {}).get("name", "Unknown")
             token_str = f"{symbol}: {balance:.4f} @ ${price:.6f} = ${value:.2f} on {network_name}"
             top_tokens.append(token_str)
         
         # Format top apps by value
         top_apps = []
-        sorted_positions = sorted(app_positions, key=lambda x: x.get("balanceUSD", 0), reverse=True)
+        sorted_positions = sorted(app_positions, key=lambda x: float(x.get("balanceUSD", 0)), reverse=True)
         for position in sorted_positions[:3]:  # Get top 3 positions
             app_name = position.get("app", {}).get("name", "Unknown")
             position_name = position.get("name", "Unknown Position")
-            value = position.get("balanceUSD", 0)
+            # Ensure value is converted to float before formatting
+            value = float(position.get("balanceUSD", 0))
             network_name = position.get("network", {}).get("name", "Unknown")
             
             # Handle different app position types
             if position.get("type") == "app-token":
                 symbol = position.get("symbol", "")
-                balance = position.get("balance", 0)
+                # Ensure balance is converted to float before formatting
+                balance = float(position.get("balance", 0))
                 app_str = f"{app_name} - {position_name} ({symbol}): {balance:.4f} = ${value:.2f} on {network_name}"
             else:  # contract-position
                 display_props = position.get("displayProps", [])
@@ -341,21 +318,13 @@ class PortfolioTool(BaseTool):
             
             top_apps.append(app_str)
         
-        # Format top NFTs
-        top_nfts = []
-        for nft in nft_items[:3]:  # Get top 3 NFTs
-            collection = nft.get("collection", {})
-            collection_name = collection.get("name", "Unknown Collection")
-            nft_name = nft.get("name", "Unnamed")
-            token_id = nft.get("tokenId", "Unknown ID")
-            floor_price = collection.get("floorPrice", 0)
-            nft_str = f"{collection_name} - {nft_name} (#{token_id}) - Floor: ${floor_price:.4f}"
-            top_nfts.append(nft_str)
+        # No detailed NFT data to format
+
         
         # Format the full portfolio summary
         summary = [
             f"Portfolio Summary for {address}:",
-            f"Total Value: ${total_value:.2f}",
+            f"Total Value: ${float(total_value):.2f}",
             f"Assets: {token_count} tokens, {nft_count} NFTs, {app_count} DeFi positions",
             ""
         ]
@@ -381,9 +350,7 @@ class PortfolioTool(BaseTool):
         
         # Add NFT section if there are NFTs
         if nft_count > 0:
-            summary.append(f"NFT Holdings: {nft_count} NFTs - Total Floor Value: ${nft_value:.2f}")
-            if top_nfts:
-                summary.append("Top NFTs:")
-                summary.extend(top_nfts)
+            summary.append(f"NFT Holdings: {nft_count} NFTs - Total Floor Value: ${float(nft_value):.2f}")
+            summary.append("Note: Detailed NFT information unavailable due to API schema limitations.")
         
         return "\n".join(summary)
