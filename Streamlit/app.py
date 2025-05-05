@@ -146,7 +146,7 @@ if run_button:
             # Display the report
             st.markdown(report_content)
             
-            # Download button
+            # Download button1
             st.download_button(
                 label="📥 Download Report",
                 data=report_content,

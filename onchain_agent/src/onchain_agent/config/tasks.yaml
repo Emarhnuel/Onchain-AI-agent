@@ -265,7 +265,7 @@ comprehensive_intelligence_report:
     all previous analyses into a cohesive strategic document with actionable recommendations.
     This is the final, culminating task that delivers maximum value to the wallet owner.
     
-    Follow this structured synthesis methodology:
+    Follow this structured synthesis methodology: 
     
     1. Holistic Data Integration:
        - Synthesize all data and insights from the portfolio analysis task
@@ -362,7 +362,3 @@ comprehensive_intelligence_report:
     * Monitoring framework: [specific KPIs, thresholds, and review cadence]
     * Adaptive strategy guidelines: [decision trees for different market conditions]
   agent: portfolio_intelligence_analyst
-  context:
-    - portfolio_analysis
-    - transaction_pattern_analysis 
-    - investment_opportunity_identification

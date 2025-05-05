@@ -87,7 +87,7 @@ class TransactionHistoryTool(BaseTool):
                             node {
                               address
                               amount
-                              amountUSD
+                              amountRaw
                               token {
                                 symbol
                                 imageUrlV2
@@ -178,9 +178,9 @@ class TransactionHistoryTool(BaseTool):
                     delta_node = delta_edge["node"]
                     symbol = delta_node.get("token", {}).get("symbol", "Unknown")
                     amount = delta_node.get("amount", 0)
-                    amount_usd = delta_node.get("amountUSD", 0)
+                    # Use amount instead of amountUSD since the API schema changed
                     sign = "+" if amount > 0 else ""  # Add plus sign for positive values
-                    token_deltas.append(f"{sign}{amount} {symbol} (${abs(amount_usd):.2f})")
+                    token_deltas.append(f"{sign}{amount} {symbol}")
             
             # Get from and to addresses with display names if available
             from_address = tx.get("fromUser", {}).get("address", "Unknown")

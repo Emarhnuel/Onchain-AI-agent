@@ -29,13 +29,13 @@ llm = LLM(
     max_tokens=50000
 ) 
 
-llm2 = LLM(
-    model="openrouter/deepseek/deepseek-r1",
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-    temperature=0.5,
-    max_tokens=30000
-)
+# llm2 = LLM(
+#     model="openrouter/deepseek/deepseek-r1",
+#     base_url="https://openrouter.ai/api/v1",
+#     api_key=OPENROUTER_API_KEY,
+#     temperature=0.5,
+#     max_tokens=30000
+# )
 
 
 @CrewBase
@@ -67,7 +67,7 @@ class OnchainAgentCrew():
         """Portfolio Intelligence Analyst agent with portfolio analysis tools."""
         return Agent( 
             config=self.agents_config['portfolio_intelligence_analyst'],
-            llm=llm2,
+            llm=llm,
             verbose=True,
             tools=[
                 PortfolioTool(),
@@ -93,7 +93,7 @@ class OnchainAgentCrew():
             ],
             max_rpm=20,
             max_iter=10,
-            llm=llm2
+            llm=llm
         )
 
     # Cross-Chain Investment Strategist Agent
@@ -103,7 +103,7 @@ class OnchainAgentCrew():
         return Agent(
             config=self.agents_config['cross_chain_investment_strategist'],
             verbose=True,
-            llm=llm2,
+            llm=llm,
             tools=[
                 PortfolioTool(),
                 SearchTool()
@@ -111,6 +111,19 @@ class OnchainAgentCrew():
             max_rpm=20,
             max_iter=10  
         )
+        
+    # Strategic Intelligence Synthesizer Agent
+    @agent
+    def strategic_intelligence_synthesizer(self) -> Agent:
+        """Strategic Intelligence Synthesizer agent with comprehensive analysis tools."""
+        return Agent(
+            config=self.agents_config['strategic_intelligence_synthesizer'],
+            verbose=True,
+            llm=llm,
+            max_rpm=20,
+            max_iter=6
+        )
+
 
     # Portfolio Analysis Task
     @task
@@ -154,7 +167,7 @@ class OnchainAgentCrew():
         """Task for creating a comprehensive intelligence report synthesizing all analyses."""
         return Task(
             config=self.tasks_config['comprehensive_intelligence_report'],
-            agent=self.portfolio_intelligence_analyst(),
+            agent=self.strategic_intelligence_synthesizer(),
             context=[
                 self.portfolio_analysis(),
                 self.transaction_pattern_analysis(),
